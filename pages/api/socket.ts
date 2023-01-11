@@ -3,7 +3,6 @@ import { Server } from "socket.io";
 
 export default function handler(_req: NextApiRequest, res: NextApiResponse) {
   if (res.socket.server.io) {
-    console.log(res.socket);
     console.log("Socket already attached");
     return res.end();
   }
@@ -20,6 +19,7 @@ export default function handler(_req: NextApiRequest, res: NextApiResponse) {
       if (currentRoom === undefined) {
         //create room
         socket.join(room);
+        socket.emit('created');
       } else if (currentRoom.size === 1) {
         // join room
         socket.join(room);
