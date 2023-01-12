@@ -11,7 +11,7 @@ const rtcConnectionConfig = () => {
         urls: "stun:openrelay.metered.ca:80",
       },
       {
-        urls: "stun.l.google.com:19302",
+        urls: "stun:google.com:19302",
       },
     ],
   };
@@ -32,8 +32,10 @@ const ChatRoom = () => {
     socketRef.current = io();
     socketRef.current.emit("join", roomName);
 
-    socketRef.current.on("created", handleRoomJoin(true));
-    socketRef.current.on("joined", handleRoomJoin(false));
+    socketRef.current.on("created", handleRoomCreation);
+    socketRef.current.on("joined", handleRoomJoin);
+
+    socketRef.current.on("full", handleRoomFull);
 
     socketRef.current.on("ready", startCall);
     socketRef.current.on("offer", handleOffer);
@@ -48,6 +50,11 @@ const ChatRoom = () => {
       }
     };
   }, [roomName]);
+
+  const handleRoomFull = () => {
+    alert("Room full!! redirecting...");
+    router.push("/");
+  };
 
   const handlePeerIceCandidate = (peerIceCandidate: RTCIceCandidate) => {
     const candidate = new RTCIceCandidate(peerIceCandidate);
@@ -64,6 +71,7 @@ const ChatRoom = () => {
 
   const handleOffer = (offer: RTCSessionDescriptionInit) => {
     if (!hostRef.current) {
+      console.log("Peer recieving offer");
       rtcConnectionRef.current = createRTCPeerConnection();
       // add audio and video tracks
       rtcConnectionRef.current.addTrack(
@@ -82,6 +90,7 @@ const ChatRoom = () => {
       rtcConnectionRef
         .current!.createAnswer()
         .then(answer => {
+          console.log("Peer sending answer");
           rtcConnectionRef.current!.setLocalDescription(answer);
           socketRef.current!.emit("answer", answer, roomName);
         })
@@ -91,6 +100,7 @@ const ChatRoom = () => {
 
   const startCall = () => {
     // once host gets ready even from peer, it initiates the call.
+    console.log("host should start call");
     if (hostRef.current) {
       rtcConnectionRef.current = createRTCPeerConnection();
       // add audio and video tracks
@@ -107,6 +117,7 @@ const ChatRoom = () => {
         .createOffer()
         .then(offer => {
           rtcConnectionRef.current!.setLocalDescription(offer);
+          console.log("Host sending offer");
           socketRef.current!.emit("offer", offer, roomName);
         })
         .catch(err => console.error(err));
@@ -123,21 +134,23 @@ const ChatRoom = () => {
 
   const handleIceCandidate = (e: RTCPeerConnectionIceEvent) => {
     if (e.candidate) {
-      socketRef.current!.emit("connect", e.candidate, roomName);
+      socketRef.current!.emit("ice-candidate", e.candidate, roomName);
     }
   };
 
   const handleTracks = (e: RTCTrackEvent) => {
-    console.log("peer track recieved" + e.streams);
+    console.log("peer track recieved");
     peerVideoRef.current!.srcObject = e.streams[0];
+    peerVideoRef.current!.onloadedmetadata = () => {
+      userVideoRef.current!.play();
+    };
   };
 
-  const handleRoomJoin = (isHost: boolean) => () => {
-    console.log("streaming");
-    if (isHost) hostRef.current = true;
+  const handleRoomJoin = () => {
+    console.log("streaming peer");
     navigator.mediaDevices
       .getUserMedia({
-        audio: false,
+        audio: true,
         video: { width: 500, height: 500 },
       })
       .then(stream => {
@@ -146,7 +159,27 @@ const ChatRoom = () => {
         userVideoRef.current!.onloadedmetadata = () => {
           userVideoRef.current!.play();
         };
-        if (!isHost) socketRef.current!.emit("ready");
+        console.log("Peer sending ready");
+        socketRef.current!.emit("ready", roomName);
+      })
+      .catch(err => console.error(err));
+  };
+
+  const handleRoomCreation = () => {
+    console.log("streaming host");
+    console.log("host is being set");
+    hostRef.current = true;
+    navigator.mediaDevices
+      .getUserMedia({
+        audio: true,
+        video: { width: 500, height: 500 },
+      })
+      .then(stream => {
+        userStreamRef.current = stream;
+        userVideoRef.current!.srcObject = stream;
+        userVideoRef.current!.onloadedmetadata = () => {
+          userVideoRef.current!.play();
+        };
       })
       .catch(err => console.error(err));
   };
