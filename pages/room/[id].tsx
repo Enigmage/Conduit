@@ -40,12 +40,15 @@ const ChatRoom = () => {
     socketRef.current.on("ready", startCall);
     socketRef.current.on("offer", handleOffer);
     socketRef.current.on("answer", handleAnswer);
+    socketRef.current.on("leave", onPeerLeave);
 
     socketRef.current.on("ice-candidate", handlePeerIceCandidate);
 
     return () => {
       console.log("disconnecting");
       if (socketRef.current) {
+        // socketRef.current.emit("leave");
+        cleanConnection();
         socketRef.current.disconnect();
       }
     };
@@ -183,10 +186,46 @@ const ChatRoom = () => {
       })
       .catch(err => console.error(err));
   };
+  const cleanConnection = (both: boolean = true) => {
+    if (both) {
+      socketRef.current?.emit("leave", roomName);
+      if (userVideoRef.current?.srcObject) {
+        (userVideoRef.current.srcObject as any)
+          .getTracks()
+          .forEach((track: any) => track.stop());
+      }
+    }
+    if (peerVideoRef.current?.srcObject) {
+      (peerVideoRef.current.srcObject as any)
+        .getTracks()
+        .forEach((track: any) => track.stop());
+    }
+    // safely close connection
+
+    if (rtcConnectionRef.current) {
+      rtcConnectionRef.current.ontrack = null;
+      rtcConnectionRef.current.onicecandidate = null;
+      rtcConnectionRef.current.close();
+      rtcConnectionRef.current = undefined;
+    }
+  };
+  const leaveCall = () => {
+    cleanConnection();
+    router.push("/");
+  };
+
+  const onPeerLeave = () => {
+    console.log("should reload");
+    hostRef.current = true;
+    cleanConnection(false);
+  };
   return (
     <div>
       <video autoPlay ref={userVideoRef} />
       <video autoPlay ref={peerVideoRef} />
+      <button onClick={leaveCall} type="button">
+        Leave Call
+      </button>
     </div>
   );
 };

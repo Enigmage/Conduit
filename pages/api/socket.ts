@@ -2,13 +2,13 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { Server } from "socket.io";
 
 export default function handler(_req: NextApiRequest, res: NextApiResponse) {
-  if (res.socket.server.io) {
+  if ((res.socket as any).server.io) {
     console.log("Socket already attached");
     return res.end();
   }
 
-  const io = new Server(res.socket.server);
-  res.socket.server.io = io;
+  const io = new Server((res.socket as any).server);
+  (res.socket as any).server.io = io;
 
   io.on("connection", socket => {
     console.log(`Someone connected ${socket.id}`);
@@ -19,7 +19,7 @@ export default function handler(_req: NextApiRequest, res: NextApiResponse) {
       if (currentRoom === undefined) {
         //create room
         socket.join(room);
-        socket.emit('created');
+        socket.emit("created");
       } else if (currentRoom.size === 1) {
         // join room
         socket.join(room);
@@ -47,8 +47,8 @@ export default function handler(_req: NextApiRequest, res: NextApiResponse) {
       socket.broadcast.to(room).emit("answer", answer);
     });
     socket.on("leave", (room: string) => {
-      socket.leave(room);
       socket.broadcast.to(room).emit("leave");
+      socket.leave(room);
     });
   });
   return res.end();
