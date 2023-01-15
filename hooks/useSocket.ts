@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 
+// Hook to initialize connection with a socket.
 const useSocket = () => {
   const socketCreated = useRef(false);
   useEffect(() => {

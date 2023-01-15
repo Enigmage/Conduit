@@ -9,8 +9,7 @@ export default function Home() {
   const [roomName, setRoomName] = useState("");
   const joinRoom = (e: any) => {
     e.preventDefault();
-    if (roomName.length > 3)
-      router.push(`/room/${roomName + Math.random().toString(36).slice(2)}`);
+    if (roomName.length >= 3) router.push(`/room/${roomName}`);
   };
   return (
     <>
@@ -21,17 +20,30 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className={styles.main}>
-        <h1>Peer-to-peer calls</h1>
+        <div>
+          <h1>Conduit</h1>
+          <p>Peer-to-peer calls</p>
+        </div>
         <div className={styles.roomForm}>
-          <h3>Room Name</h3>
-          <input
-            type="text"
-            onChange={e => setRoomName(e.target.value)}
-            value={roomName}
-          />
-          <button onClick={joinRoom} type="button">
-            Join
-          </button>
+          <span>
+            <h3>Room Name</h3>
+          </span>
+          <span>
+            <input
+              type="text"
+              onChange={e => setRoomName(e.target.value)}
+              value={roomName}
+            />
+          </span>
+          <span>
+            <button
+              onClick={joinRoom}
+              type="button"
+              disabled={roomName.length < 3}
+            >
+              Join
+            </button>
+          </span>
         </div>
       </main>
     </>

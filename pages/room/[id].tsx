@@ -3,18 +3,17 @@ import { useRouter } from "next/router";
 import useSocket from "../../hooks/useSocket";
 import { io, type Socket } from "socket.io-client";
 import { type DefaultEventsMap } from "socket.io/dist/typed-events";
+import styles from "../../styles/Room.module.css";
 
-const rtcConnectionConfig = () => {
-  return {
-    iceServers: [
-      {
-        urls: "stun:openrelay.metered.ca:80",
-      },
-      {
-        urls: "stun:google.com:19302",
-      },
-    ],
-  };
+const connectionConfig: RTCConfiguration = {
+  iceServers: [
+    {
+      urls: "stun:openrelay.metered.ca:80",
+    },
+    {
+      urls: "stun:google.com:19302",
+    },
+  ],
 };
 
 const ChatRoom = () => {
@@ -28,7 +27,10 @@ const ChatRoom = () => {
   const hostRef = useRef(false);
   const { id: roomName } = router.query;
   // console.log(roomName);
+
   useEffect(() => {
+    // empty io() means it will send request to the
+    // server that sent it.
     socketRef.current = io();
     socketRef.current.emit("join", roomName);
 
@@ -61,8 +63,8 @@ const ChatRoom = () => {
 
   const handlePeerIceCandidate = (peerIceCandidate: RTCIceCandidate) => {
     const candidate = new RTCIceCandidate(peerIceCandidate);
-    rtcConnectionRef
-      .current!.addIceCandidate(candidate)
+    rtcConnectionRef.current
+      ?.addIceCandidate(candidate)
       .catch(err => console.error(err));
   };
 
@@ -127,7 +129,7 @@ const ChatRoom = () => {
     }
   };
   const createRTCPeerConnection = () => {
-    const connection = new RTCPeerConnection(rtcConnectionConfig());
+    const connection = new RTCPeerConnection(connectionConfig);
 
     connection.onicecandidate = handleIceCandidate;
 
@@ -220,9 +222,15 @@ const ChatRoom = () => {
     cleanConnection(false);
   };
   return (
-    <div>
-      <video autoPlay ref={userVideoRef} />
-      <video autoPlay ref={peerVideoRef} />
+    <div className={styles.main}>
+      <div className={styles.vidContainer}>
+        <div>
+          <video autoPlay ref={userVideoRef} />
+        </div>
+        <div>
+          <video autoPlay ref={peerVideoRef} />
+        </div>
+      </div>
       <button onClick={leaveCall} type="button">
         Leave Call
       </button>

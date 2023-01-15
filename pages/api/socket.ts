@@ -33,11 +33,11 @@ export default function handler(_req: NextApiRequest, res: NextApiResponse) {
     // user ready to communicate
     socket.on("ready", (room: string) => {
       // send to the other user in the room.
+      // console.log("Ready sent");
       socket.broadcast.to(room).emit("ready");
-      console.log("Ready sent");
     });
     socket.on("ice-candidate", (candidate: RTCIceCandidate, room: string) => {
-      console.log(candidate);
+      // console.log(candidate);
       socket.broadcast.to(room).emit("ice-candidate", candidate);
     });
     socket.on("offer", (offer, room: string) => {

@@ -1,7 +1,7 @@
 .main {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: space-evenly;
   align-items: center;
   padding: 5rem;
   min-height: 100vh;
@@ -12,6 +12,10 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
+}
+
+.roomForm > span {
+  padding: 2% 0;
 }
 
 .description {
@@ -104,7 +108,7 @@
 
 .center::before,
 .center::after {
-  content: '';
+  content: "";
   left: 50%;
   position: absolute;
   filter: blur(45px);
@@ -132,7 +136,7 @@
 
 .thirteen::before,
 .thirteen::after {
-  content: '';
+  content: "";
   position: absolute;
   z-index: -1;
 }
