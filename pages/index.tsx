@@ -2,6 +2,7 @@ import Head from "next/head";
 import { useRouter } from "next/router";
 import { useState } from "react";
 import styles from "../styles/Home.module.css";
+import { v4 as uuid } from "uuid"
 // import Image from 'next/image'
 
 export default function Home() {
@@ -9,7 +10,7 @@ export default function Home() {
   const [roomName, setRoomName] = useState("");
   const joinRoom = (e: any) => {
     e.preventDefault();
-    if (roomName.length >= 3) router.push(`/room/${roomName}`);
+    router.push(`/room/${roomName || uuid()}`);
   };
   return (
     <>
@@ -22,26 +23,27 @@ export default function Home() {
       <main className={styles.main}>
         <div>
           <h1>Conduit</h1>
-          <p>Peer-to-peer calls</p>
+          <p>peer to peer chat</p>
         </div>
         <div className={styles.roomForm}>
           <span>
-            <h3>Room Name</h3>
+            <h3>Room</h3>
           </span>
-          <span>
+          <div className={styles.inputContainer}>
             <input
               type="text"
               onChange={e => setRoomName(e.target.value)}
               value={roomName}
+              placeholder="Enter room code to join"
             />
-          </span>
+          </div>
           <span>
             <button
+              className={styles.button10}
               onClick={joinRoom}
               type="button"
-              disabled={roomName.length < 3}
             >
-              Join
+              {roomName.length === 0 ? "Create" : "Join"}
             </button>
           </span>
         </div>

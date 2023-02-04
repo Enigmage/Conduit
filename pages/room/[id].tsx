@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import useSocket from "../../hooks/useSocket";
 import { io, type Socket } from "socket.io-client";
@@ -18,10 +18,13 @@ const connectionConfig: RTCConfiguration = {
 
 const ChatRoom = () => {
   useSocket();
+
+  const [micActive, setMicActive] = useState(true);
+  const [camActive, setCamActive] = useState(true);
   const router = useRouter();
   const userVideoRef = useRef<HTMLVideoElement>(null);
   const peerVideoRef = useRef<HTMLVideoElement>(null);
-  const rtcConnectionRef = useRef<RTCPeerConnection>();
+  const rtcConnectionRef = useRef<RTCPeerConnection | null>();
   const socketRef = useRef<Socket<DefaultEventsMap, DefaultEventsMap>>();
   const userStreamRef = useRef<MediaStream>();
   const hostRef = useRef(false);
@@ -156,7 +159,7 @@ const ChatRoom = () => {
     navigator.mediaDevices
       .getUserMedia({
         audio: true,
-        video: { width: 500, height: 500 },
+        video: /* { width: 500, height: 500 } */ true,
       })
       .then(stream => {
         userStreamRef.current = stream;
@@ -177,7 +180,7 @@ const ChatRoom = () => {
     navigator.mediaDevices
       .getUserMedia({
         audio: true,
-        video: { width: 500, height: 500 },
+        video: /* { width: 500, height: 500 } */ true,
       })
       .then(stream => {
         userStreamRef.current = stream;
@@ -208,7 +211,7 @@ const ChatRoom = () => {
       rtcConnectionRef.current.ontrack = null;
       rtcConnectionRef.current.onicecandidate = null;
       rtcConnectionRef.current.close();
-      rtcConnectionRef.current = undefined;
+      rtcConnectionRef.current = null;
     }
   };
   const leaveCall = () => {
@@ -220,7 +223,24 @@ const ChatRoom = () => {
     console.log("should reload");
     hostRef.current = true;
     cleanConnection(false);
+    router.reload();
   };
+
+  const toggleMedia = (type: any, currState: any) => {
+    userStreamRef.current?.getTracks().forEach((track: any) => {
+      if (track.kind === type) track.enabled = !currState;
+    });
+  };
+
+  const toggleMic = () => {
+    toggleMedia("audio", micActive);
+    setMicActive(prev => !prev);
+  };
+  const toggleCam = () => {
+    toggleMedia("video", camActive);
+    setCamActive(prev => !prev);
+  };
+
   return (
     <div className={styles.main}>
       <div className={styles.vidContainer}>
@@ -231,9 +251,17 @@ const ChatRoom = () => {
           <video autoPlay ref={peerVideoRef} />
         </div>
       </div>
-      <button onClick={leaveCall} type="button">
-        Leave Call
-      </button>
+      <div className={styles.buttonGrid}>
+        <button onClick={toggleCam} type="button" className={styles.button11}>
+          {camActive ? "Camera On" : "Camera Off"}
+        </button>
+        <button onClick={leaveCall} type="button" className={styles.button10}>
+          Leave Call
+        </button>
+        <button onClick={toggleMic} type="button" className={styles.button11}>
+          {micActive ? "Mic On" : "Mic Off"}
+        </button>
+      </div>
     </div>
   );
 };
