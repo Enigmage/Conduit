@@ -150,7 +150,7 @@ const ChatRoom = () => {
     console.log("peer track recieved");
     peerVideoRef.current!.srcObject = e.streams[0];
     peerVideoRef.current!.onloadedmetadata = () => {
-      userVideoRef.current!.play();
+      peerVideoRef.current!.play();
     };
   };
 
@@ -221,8 +221,9 @@ const ChatRoom = () => {
 
   const onPeerLeave = () => {
     console.log("should reload");
-    hostRef.current = true;
     cleanConnection(false);
+    hostRef.current = true;
+    // temporary fix!!
     router.reload();
   };
 
